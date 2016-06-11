@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+
+  "name": "DigiKeychain",
+  "description": "Save products you like on DigiKey",
+  "version": "1.0",
+
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["http://www.digikey.com/product-search/*"],
+      "js": ["dom.js"]
+    }
+  ],
+
+  "permissions": [
+    "activeTab",
+    "https://ajax.googleapis.com/"
+  ]
+}
