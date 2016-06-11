@@ -2,22 +2,22 @@
   var productTable = document.getElementById('productTable');
   if (!productTable) {
     error('Could not find product table');
-    return;
+  } else {
+    log('Adding DigiKC column');
+    addRowToTable(productTable);
   }
 
-  addRowToTable(productTable);
 
   /*
    * Helper methods
    */
 
-  var CONSOLE_PREFIX = 'DigiKeychain - ';
-  function log(message) { console.log(CONSOLE_PREFIX + message); }
-  function error(message) { console.error(CONSOLE_PREFIX + message); }
+  function log(message) { console.log('DigiKeychain - ' + message); }
+  function error(message) { console.error('DigiKeychain - ' + message); }
 
   function addRowToTable(table) {
     // insert thead row
-    var th = document.createElement('tr');
+    var th = document.createElement('th');
     th.innerHTML = "DigiKC";
     var thead = table.getElementsByTagName('thead')[0];
     var theadRow = thead.getElementsByTagName('tr')[0];
