@@ -116,14 +116,12 @@
 
     var obj = {};
     obj[key] = items;
+
     chrome.storage.sync.set(obj, function() {
       if (chrome.runtime.lastError) {
         error(chrome.runtime.lastError);
         return;
       }
-      chrome.storage.sync.get(null, function(stuff) {
-        console.log(stuff);
-      });
 
       if (isFunction(callback)) {
         callback();
@@ -237,6 +235,10 @@
       var tr = td.parentNode;
       var partNumber = getPartNumberFromTr(tr);
       addItemToLiked(partNumber);
+
+      var newTd = createLikedTd();
+      tr.insertBefore(newTd, td);
+      tr.removeChild(td);
     };
 
     var imgMinus = document.createElement('img');
@@ -247,6 +249,10 @@
       var tr = td.parentNode;
       var partNumber = getPartNumberFromTr(tr);
       addItemToDisliked(partNumber);
+
+      var newTd = createDislikedTd();
+      tr.insertBefore(newTd, td);
+      tr.removeChild(td);
     };
 
     return td;
@@ -264,6 +270,10 @@
       var tr = this.parentNode;
       var partNumber = getPartNumberFromTr(tr);
       removeItemFromLiked(partNumber);
+
+      var newTd = createNeutralTd();
+      tr.insertBefore(newTd, td);
+      tr.removeChild(td);
     };
 
     return td;
@@ -281,6 +291,10 @@
       var tr = this.parentNode;
       var partNumber = getPartNumberFromTr(tr);
       removeItemFromDisliked(partNumber);
+
+      var newTd = createNeutralTd();
+      tr.insertBefore(newTd, td);
+      tr.removeChild(td);
     };
 
     return td;
