@@ -55,15 +55,16 @@
     var tbodyRows = tbody.getElementsByTagName('tr');
     for (var i = 0; i < tbodyRows.length; ++i) {
       var tbodyRow = tbodyRows.item(i);
+      var productId = getPartNumberFromTr(tbodyRow);
+      var td;
 
-      var td = document.createElement('td');
-      td.className = className('td');
-      td.onclick = addItemClickHandler;
-
-      var checkbox = document.createElement('img');
-      checkbox.className = className('add');
-      checkbox.src = chrome.extension.getURL('img/check.svg');
-      td.appendChild(checkbox);
+      if (likedItems.indexOf(productId) !== -1) {
+        td = createLikedTd();
+      } else if (dislikedItems.indexOf(productId) !== -1) {
+        td = createDislikedTd();
+      } else {
+        td = createNeutralTd();
+      }
 
       tbodyRow.insertBefore(td, tbodyRow.firstChild);
     }
@@ -78,27 +79,19 @@
     });
   }
 
-  function addItemClickHandler() {
-    var parentTr = this.parentNode;
-    var partNumber = getPartNumberFromTr(parentTr);
-    if (partNumber) {
-      addItemToLiked(partNumber);
-    } else {
-      error('Could not find part number');
-    }
-  }
-
   function getStorageArray(key, callback) {
     if (!key) {
       error('Key missing; cannot get storage array');
       return;
     }
 
-    chrome.storage.sync.get(key, function(items) {
+    chrome.storage.sync.get(key, function(obj) {
       if (chrome.runtime.lastError) {
         error(chrome.runtime.lastError);
         return null;
       }
+
+      var items = obj[key];
 
       if (!Array.isArray(items)) {
         items = [];
@@ -121,11 +114,16 @@
       return;
     }
 
-    chrome.storage.sync.set({key: items}, function() {
+    var obj = {};
+    obj[key] = items;
+    chrome.storage.sync.set(obj, function() {
       if (chrome.runtime.lastError) {
         error(chrome.runtime.lastError);
         return;
       }
+      chrome.storage.sync.get(null, function(stuff) {
+        console.log(stuff);
+      });
 
       if (isFunction(callback)) {
         callback();
@@ -162,6 +160,19 @@
     });
   }
 
+  function addItemToDisliked(partNumber) {
+    getDislikedItems(function(items) {
+      var idx = items.indexOf(partNumber);
+      if (idx !== -1) {
+        error('Cannot add part to disliked; item already disliked');
+      } else {
+        items.push(partNumber);
+        items.sort();
+        saveDislikedItems(items);
+      }
+    });
+  }
+
   function removeItemFromLiked(partNumber) {
     getLikedItems(function(items) {
       var idx = items.indexOf(partNumber);
@@ -172,6 +183,19 @@
       }
 
       saveLikedItems(items);
+    });
+  }
+
+  function removeItemFromDisliked(partNumber) {
+    getDislikedItems(function(items) {
+      var idx = items.indexOf(partNumber);
+      if (idx == -1) {
+        error('Cannot remove part from disliked; item not already disliked');
+      } else {
+        items.splice(idx, 1);
+      }
+
+      saveDislikedItems(items);
     });
   }
 
@@ -199,5 +223,66 @@
       }
     }
     return null;
+  }
+
+  function createNeutralTd() {
+    var td = document.createElement('td');
+    td.className = className('neutral');
+
+    var imgPlus = document.createElement('img');
+    imgPlus.src = chrome.extension.getURL('svg/plus.svg');
+    td.appendChild(imgPlus);
+    imgPlus.onclick = function() {
+      var td = this.parentNode;
+      var tr = td.parentNode;
+      var partNumber = getPartNumberFromTr(tr);
+      addItemToLiked(partNumber);
+    };
+
+    var imgMinus = document.createElement('img');
+    imgMinus.src = chrome.extension.getURL('svg/minus.svg');
+    td.appendChild(imgMinus);
+    imgMinus.onclick = function() {
+      var td = this.parentNode;
+      var tr = td.parentNode;
+      var partNumber = getPartNumberFromTr(tr);
+      addItemToDisliked(partNumber);
+    };
+
+    return td;
+  }
+
+  function createLikedTd() {
+    var td = document.createElement('td');
+    td.className = className('liked');
+
+    var img = document.createElement('img');
+    img.src = chrome.extension.getURL('svg/check.svg');
+    td.appendChild(img);
+
+    td.onclick = function() {
+      var tr = this.parentNode;
+      var partNumber = getPartNumberFromTr(tr);
+      removeItemFromLiked(partNumber);
+    };
+
+    return td;
+  }
+
+  function createDislikedTd() {
+    var td = document.createElement('td');
+    td.className = className('disliked');
+
+    var img = document.createElement('img');
+    img.src = chrome.extension.getURL('svg/x.svg');
+    td.appendChild(img);
+
+    td.onclick = function() {
+      var tr = this.parentNode;
+      var partNumber = getPartNumberFromTr(tr);
+      removeItemFromDisliked(partNumber);
+    };
+
+    return td;
   }
 })();
